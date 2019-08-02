@@ -12,7 +12,7 @@ from .io.socket import socks_server_handler as socket_socks_server_handler
 from .protocol import DEFAULT_ENCODING
 
 
-parser = argparse.ArgumentParser(description="Socks proxy server")
+parser = argparse.ArgumentParser("siosocks", description="Socks proxy server")
 parser.add_argument("--backend", default="asyncio", choices=["asyncio", "socketserver", "trio"],
                     help="Socks server backend [default: %(default)s]")
 parser.add_argument("--host", default=None, help="Socks server host [default: %(default)s]")

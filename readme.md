@@ -73,13 +73,99 @@ You should use [`partial`](https://docs.python.org/3/library/functools.html#func
 
 Nothing to say more. Typical usage can be found at [`__main__.py`](https://github.com/pohmelie/siosocks/blob/master/siosocks/__main__.py)
 
-# Example
+# Examples
+## High-level
+This section will use `asyncio` as backend, since it is main target/reason for `siosocks`
+### Client
+``` python
+import asyncio
+
+from siosocks.io.asyncio import open_connection
+
+
+HOST = "api.ipify.org"
+REQ = """GET /?format=json HTTP/1.1
+Host: api.ipify.org
+User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:67.0) Gecko/20100101 Firefox/67.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en,en-US;q=0.7,ru;q=0.3
+Accept-Encoding: gzip, deflate
+DNT: 1
+Connection: keep-alive
+Upgrade-Insecure-Requests: 1
+Cache-Control: max-age=0
+
+"""
+
+
+async def main():
+    # assume we have tor started
+    r, w = await open_connection(HOST, 80, socks_host="localhost", socks_port=9050, socks_version=5)
+    w.write(REQ.replace("\n", "\r\n").encode())
+    await w.drain()
+    print(await r.read(8192))
+    w.close()
+
+
+loop = asyncio.get_event_loop()
+loop.run_until_complete(main())
+```
+### Server
+``` python
+import socket
+import asyncio
+import contextlib
+
+from .io.asyncio import socks_server_handler
+
+
+loop = asyncio.get_event_loop()
+coro = asyncio.start_server(socks_server_handler, host=ns.host, port=ns.port, family=family)
+server = loop.run_until_complete(coro)
+addresses = []
+for sock in server.sockets:
+    if sock.family in (socket.AF_INET, socket.AF_INET6):
+        host, port, *_ = sock.getsockname()
+        addresses.append(f"{host}:{port}")
+print(f"Socks{socks_versions} proxy serving on {', '.join(addresses)}")
+with contextlib.suppress(KeyboardInterrupt):
+    loop.run_forever()
+```
+But if you just want one-shot socks server then try:
+``` bash
+python -m siosocks
+```
+This will start socks 4, 5 server on all interfaces on 1080 port. For more information try `--help`
+``` bash
+python -m siosocks --help
+usage: siosocks [-h] [--backend {asyncio,socketserver,trio}] [--host HOST]
+                [--port PORT] [--family {ipv4,ipv6,auto}] [--socks SOCKS]
+                [--username USERNAME] [--password PASSWORD]
+                [--encoding ENCODING] [--no-strict] [-v]
+
+Socks proxy server
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --backend {asyncio,socketserver,trio}
+                        Socks server backend [default: asyncio]
+  --host HOST           Socks server host [default: None]
+  --port PORT           Socks server port [default: 1080]
+  --family {ipv4,ipv6,auto}
+                        Socket family [default: auto]
+  --socks SOCKS         Socks protocol version [default: []]
+  --username USERNAME   Socks auth username [default: None]
+  --password PASSWORD   Socks auth password [default: None]
+  --encoding ENCODING   String encoding [default: utf-8]
+  --no-strict           Allow multiversion socks server, when socks5 used with
+                        username/password auth [default: False]
+  -v, --version         Show siosocks version
+```
+## Low-level
 Shadowsocks-like [client/server](https://github.com/pohmelie/siosocks/blob/master/examples/shadowsocks-like.py). Shadowsocks-like built on top of socks5 and encryption. It have «client», which is actually socks server and «server». So, precisely there are two servers: client side and server side. Purpose of shadowsocks is to encrypt data between «incoming» and «outgoing» servers. In common this looks like:
 ```
-client → «incoming» socks server ⇒ «outgoing» socks server → target server
+client (non-encrypted socks) «incoming» socks server (encrypted socks) «outgoing» socks server (non-socks connection) target server
 ```
-In this scheme `→` means «raw»/not encrypted socks connection, and `⇒` means encrypted somehow data flow.
-
 Example above use Caesar cipher for simplicity (and security of course).
 
 # Roadmap/contibutions

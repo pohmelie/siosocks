@@ -6,7 +6,6 @@ services:
 branches:
   only:
     - master
-    - initial
 stages:
   - lint
   - test

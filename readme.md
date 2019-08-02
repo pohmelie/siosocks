@@ -116,18 +116,17 @@ import socket
 import asyncio
 import contextlib
 
-from .io.asyncio import socks_server_handler
+from siosocks.io.asyncio import socks_server_handler
 
 
 loop = asyncio.get_event_loop()
-coro = asyncio.start_server(socks_server_handler, host=ns.host, port=ns.port, family=family)
-server = loop.run_until_complete(coro)
+server = loop.run_until_complete(asyncio.start_server(socks_server_handler, port=1080))
 addresses = []
 for sock in server.sockets:
     if sock.family in (socket.AF_INET, socket.AF_INET6):
         host, port, *_ = sock.getsockname()
         addresses.append(f"{host}:{port}")
-print(f"Socks{socks_versions} proxy serving on {', '.join(addresses)}")
+print(f"Socks4/5 proxy serving on {', '.join(addresses)}")
 with contextlib.suppress(KeyboardInterrupt):
     loop.run_forever()
 ```

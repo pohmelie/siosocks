@@ -1,0 +1,4 @@
+include readme.md
+include license.txt
+include history.md
+recursive-include tests *

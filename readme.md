@@ -7,7 +7,7 @@
 [Sans-io](https://sans-io.readthedocs.io/) socks 4/5 client/server library/framework.
 
 # Reasons
-* No oneshot socks servers
+* No one-shot socks servers
 * Sans-io
 * asyncio-ready [`twunnel3`](https://github.com/jvansteirteghem/twunnel3) is dead
 * [`aiosocks`](https://github.com/nibrag/aiosocks) do not mimic `asyncio.open_connection` arguments (maybe dead too)
@@ -19,7 +19,7 @@
 * Socks versions: 4, 4a, 5
 * Socks5 auth: no auth, username/password
 * Couple io backends: asyncio, trio, socketserver
-* Oneshot socks server
+* One-shot socks server (`python -m siosocks`)
 
 # License
 `siosocks` is offered under WTFPL license.

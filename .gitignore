@@ -1,0 +1,16 @@
+/build/
+/dist/
+/.coverage
+coverage.xml
+__pycache__
+*.pyc
+*.egg-info
+.idea
+/.python-version
+/.eggs
+/tags
+.vscode
+.mypy_cache
+.pytest_cache
+/*.py
+!setup.py

@@ -2,7 +2,7 @@
 ![Travis status for master branch](https://travis-ci.com/pohmelie/siosocks.svg?branch=master)
 ![Codecov coverage for master branch](https://codecov.io/gh/pohmelie/siosocks/branch/master/graph/badge.svg)
 ![Pypi version](https://img.shields.io/pypi/v/siosocks.svg)
-![Pypi downloads count](https://pypi-badges.global.ssl.fastly.net/svg?package=siosocks&timeframe=monthly)
+![Pypi downloads count](https://img.shields.io/pypi/dm/siosocks)
 
 [Sans-io](https://sans-io.readthedocs.io/) socks 4/5 client/server library/framework.
 

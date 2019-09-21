@@ -22,7 +22,7 @@
 * One-shot socks server (`python -m siosocks`)
 
 # License
-`siosocks` is offered under WTFPL license.
+`siosocks` is offered under MIT license.
 
 # Requirements
 * python 3.6+

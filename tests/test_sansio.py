@@ -1,6 +1,7 @@
 import pytest
 
 from siosocks.sansio import SansIORW
+from siosocks.exceptions import SocksException
 
 
 @pytest.fixture
@@ -47,7 +48,7 @@ def test_read_exactly(io):
     assert io.read_exactly(3) == b"123"
     assert io.read_exactly(1, put_back=True) == b"4"
     assert io.read_exactly(1) == b"4"
-    with pytest.raises(EOFError):
+    with pytest.raises(SocksException):
         io.set(b"1").read_exactly(2)
 
 
@@ -56,11 +57,11 @@ def test_read_until(io):
     assert io.read_until(b"3", put_back=True) == b"12"
     assert io.read_until(b"3") == b"12"
     assert io.read_until(b"5", max_size=2) == b"34"
-    with pytest.raises(ValueError):
+    with pytest.raises(SocksException):
         io.set(b"1", b"234", b"56").read_until(b"4", max_size=2)
-    with pytest.raises(ValueError):
+    with pytest.raises(SocksException):
         io.set(b"123", b"456").read_until(b"4", max_size=2)
-    with pytest.raises(EOFError):
+    with pytest.raises(SocksException):
         io.set(b"123").read_until(b"4")
 
 
@@ -69,7 +70,7 @@ def test_read_struct(io):
     assert io.read_struct("3B", put_back=True) == (1, 2, 3)
     assert io.read_struct("3B") == (1, 2, 3)
     assert io.set(b"\x01\x02").read_struct("B") == 1
-    with pytest.raises(EOFError):
+    with pytest.raises(SocksException):
         io.set(b"\x01").read_struct("3B")
 
 
@@ -77,13 +78,13 @@ def test_read_c_string(io):
     io.set(b"foo", b"bar", b"\x00", b"tail")
     assert io.read_c_string() == "foobar"
     assert io.read_exactly(4) == b"tail"
-    with pytest.raises(EOFError):
+    with pytest.raises(SocksException):
         io.set(b"foobar").read_c_string()
 
 
 def test_read_pascal_string(io):
     assert io.set(b"\x06", b"foobar").read_pascal_string() == "foobar"
-    with pytest.raises(EOFError):
+    with pytest.raises(SocksException):
         io.set(b"\x07", b"foobar").read_pascal_string()
 
 
@@ -111,5 +112,5 @@ def test_write_c_string(io):
 def test_write_pascal_string(io):
     io.write_pascal_string("foobar")
     assert io.buffer == [b"\x06", b"foobar"]
-    with pytest.raises(ValueError):
+    with pytest.raises(SocksException):
         io.write_pascal_string("x" * 256)

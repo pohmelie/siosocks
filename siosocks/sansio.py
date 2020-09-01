@@ -1,5 +1,7 @@
 import struct
 
+from .exceptions import SocksException
+
 
 MAX_STRING_SIZE = 2 ** 10
 
@@ -20,7 +22,7 @@ class SansIORW:
     def _read(self):
         data = yield dict(method="read")
         if not data:
-            raise EOFError
+            raise SocksException("Unexpected end of data")
         return data
 
     def read_exactly(self, count, *, put_back=False):
@@ -32,7 +34,7 @@ class SansIORW:
         while True:
             pos = self.buffer.find(delimiter)
             if max_size is not None and (pos == -1 and len(self.buffer) > max_size or pos > max_size):
-                raise ValueError(f"Buffer became too long ({len(self.buffer)} > {max_size})")
+                raise SocksException(f"Buffer became too long ({len(self.buffer)} > {max_size})")
             if pos != -1:
                 return self._take_first(pos, put_back=put_back)
             self.buffer += yield from self._read()
@@ -75,7 +77,7 @@ class SansIORW:
         b = s if self.encoding is None else s.encode(self.encoding)
         size = len(b)
         if size > 255:
-            raise ValueError(f"Pascal string must be no longer than 255 characters, got {size}")
+            raise SocksException(f"Pascal string must be no longer than 255 characters, got {size}")
         yield from self.write_struct("B", size)
         yield from self.write(b)
 

@@ -3,6 +3,7 @@ import contextlib
 
 import pytest
 
+from siosocks.exceptions import SocksException
 from siosocks.protocol import SocksClient, SocksServer
 from siosocks.sansio import SansIORW
 
@@ -62,7 +63,7 @@ def test_client_bad_socks_version():
         io = SansIORW(encoding="utf-8")
         yield from io.read_exactly(1)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(SocksException):
         rotor(SocksClient("abc", 123, 6), server())
 
 
@@ -72,7 +73,7 @@ def test_client_socks4_and_auth():
         io = SansIORW(encoding="utf-8")
         yield from io.read_exactly(1)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(SocksException):
         rotor(SocksClient("abc", 123, 4, username="yoba", password="foo"), server())
 
 
@@ -91,7 +92,7 @@ def test_client_socks4_connection_failed():
         yield from io.write_struct("BBH4s", 0, 0x5b, 0, b"\x00" * 4)
         yield from io.passthrough()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(SocksException):
         rotor(SocksClient("127.0.0.1", 123, 4, socks4_extras=dict(user_id="yoba")), server())
 
 
@@ -110,7 +111,7 @@ def test_client_socks4_redirect_not_supported_by_port():
         yield from io.write_struct("BBH4s", 0, 0x5a, 666, b"\x00" * 4)
         yield from io.passthrough()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(SocksException):
         rotor(SocksClient("127.0.0.1", 123, 4, socks4_extras=dict(user_id="yoba")), server())
 
 
@@ -129,7 +130,7 @@ def test_client_socks4_redirect_not_supported_by_host():
         yield from io.write_struct("BBH4s", 0, 0x5a, 0, b"\x7f\x00\x00\x01")
         yield from io.passthrough()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(SocksException):
         rotor(SocksClient("127.0.0.1", 123, 4, socks4_extras=dict(user_id="yoba")), server())
 
 
@@ -178,7 +179,7 @@ def test_server_socks4_auth_required():
         yield from io.write(b"\x04")
         yield from io.passthrough()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(SocksException):
         rotor(client(), SocksServer(username="foo"))
 
 
@@ -189,7 +190,7 @@ def test_server_socks_bad_socks_version():
         yield from io.write(b"\x06")
         yield from io.passthrough()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(SocksException):
         rotor(client(), SocksServer())
 
 
@@ -200,7 +201,7 @@ def test_server_socks_bad_socks_version_but_allowed():
         yield from io.write(b"\x06")
         yield from io.passthrough()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(SocksException):
         rotor(client(), SocksServer(allowed_versions={6}))
 
 
@@ -212,7 +213,7 @@ def test_server_socks4_unsupported_command():
         yield from io.write_c_string("yoba")
         yield from io.passthrough()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(SocksException):
         rotor(client(), SocksServer())
 
 
@@ -229,7 +230,7 @@ def test_server_socks4_connect_failed():
         assert ipv4 == b"\x00" * 4
         raise RuntimeError("connection failed")
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(SocksException):
         rotor(client(), SocksServer(), fail_connection=True)
 
 
@@ -277,7 +278,7 @@ def test_client_socks5_request_auth_bad_version():
         yield from io.write_struct("BB", 1, 0)
         yield from io.passthrough()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(SocksException):
         rotor(SocksClient("abc", 666, 5), server())
 
 
@@ -292,7 +293,7 @@ def test_client_socks5_request_auth_not_accepted():
         yield from io.write_struct("BB", 5, 1)
         yield from io.passthrough()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(SocksException):
         rotor(SocksClient("abc", 666, 5), server())
 
 
@@ -314,7 +315,7 @@ def test_client_socks5_request_auth_username_bad_auth_version():
         yield from io.write_struct("BB", 0, 0)
         yield from io.passthrough()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(SocksException):
         rotor(SocksClient("abc", 666, 5, username="yoba", password="foo"), server())
 
 
@@ -336,7 +337,7 @@ def test_client_socks5_request_auth_username_failed():
         yield from io.write_struct("BB", 1, 1)
         yield from io.passthrough()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(SocksException):
         rotor(SocksClient("abc", 666, 5, username="yoba", password="foo"), server())
 
 
@@ -354,7 +355,7 @@ def test_client_socks5_command_bad_version():
         yield from io.write_struct("4B", 6, 0, 0, 0)
         yield from io.passthrough()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(SocksException):
         rotor(SocksClient("127.0.0.1", 666, 5), server())
 
 
@@ -374,7 +375,7 @@ def test_client_socks5_command_request_not_granted():
         yield from io.write_struct("H", 0)
         yield from io.passthrough()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(SocksException):
         rotor(SocksClient("127.0.0.1", 666, 5), server())
 
 
@@ -394,7 +395,7 @@ def test_client_socks5_command_redirect_is_not_allowed():
         yield from io.write_struct("H", 1)
         yield from io.passthrough()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(SocksException):
         rotor(SocksClient("127.0.0.1", 666, 5), server())
 
 
@@ -464,7 +465,7 @@ def test_server_socks5_no_auth_methods():
         yield from io.write_struct("B", 0)
         yield from io.passthrough()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(SocksException):
         rotor(client(), SocksServer())
 
 
@@ -479,7 +480,7 @@ def test_server_socks5_bad_username_auth_version():
         yield from io.write_struct("B", 0)
         yield from io.passthrough()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(SocksException):
         rotor(client(), SocksServer(allowed_versions={5}, username="yoba", password="foo"))
 
 
@@ -498,7 +499,7 @@ def test_server_socks5_bad_username():
         assert (auth_version, retcode) == (1, 1)
         yield from io.passthrough()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(SocksException):
         rotor(client(), SocksServer(allowed_versions={5}, username="yoba", password="foo"))
 
 
@@ -517,7 +518,7 @@ def test_server_socks5_bad_password():
         assert (auth_version, retcode) == (1, 1)
         yield from io.passthrough()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(SocksException):
         rotor(client(), SocksServer(allowed_versions={5}, username="yoba", password="foo"))
 
 
@@ -537,7 +538,22 @@ def test_server_socks5_command_not_supported():
         assert (ipv4, port) == (b"\x00" * 4, 0)
         yield from io.passthrough()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(SocksException):
+        rotor(client(), SocksServer())
+
+
+def test_server_socks5_address_type_not_supported():
+
+    def client():
+        io = SansIORW(encoding="utf-8")
+        yield from io.write_struct("B", 5)
+        yield from io.write_struct("BB", 1, 0)
+        version, auth_method = yield from io.read_struct("BB")
+        assert (version, auth_method) == (5, 0)
+        yield from io.write_struct("4B", 5, 2, 0, 13)
+        yield from io.passthrough()
+
+    with pytest.raises(SocksException):
         rotor(client(), SocksServer())
 
 
@@ -555,7 +571,7 @@ def test_server_socks5_connection_failed():
         assert (version, command, zero, address_type) == (5, 1, 0, 1)
         raise RuntimeError("connection failed")
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(SocksException):
         rotor(client(), SocksServer(), fail_connection=True)
 
 

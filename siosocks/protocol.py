@@ -3,10 +3,15 @@ import enum
 import contextlib
 from ipaddress import IPv4Address, IPv6Address
 
+from .exceptions import SocksException
 from .sansio import SansIORW
 
 
 DEFAULT_ENCODING = "utf-8"
+
+
+def _hex(i: int):
+    return f"0x{i:0>2x}"
 
 
 class SocksCommand(enum.IntEnum):
@@ -29,7 +34,7 @@ class AbstractSocks(abc.ABC):
 
     def verify_version(self, version):
         if version != self.version:
-            raise ValueError(f"Expect socks version {self.version}, but got {version}")
+            raise SocksException(f"Expect socks version {self.version}, but got {version}")
 
     @abc.abstractmethod
     def run(self):
@@ -65,7 +70,7 @@ class Socks4Server(BaseSocks4):
         self.verify_version(version)
         user_id = yield from self.io.read_c_string()  # noqa
         if command != SocksCommand.tcp_connect:
-            raise ValueError(f"Socks command {command} is not supported")
+            raise SocksException(f"Socks command {_hex(command)} is not supported")
         ipv4 = IPv4Address(ipv4)
         if self.domain_flag_value_low <= ipv4 <= self.domain_flag_value_high:
             host = yield from self.io.read_c_string()
@@ -73,9 +78,9 @@ class Socks4Server(BaseSocks4):
             host = ipv4.compressed
         try:
             yield from self.io.connect(host, port)
-        except Exception:
+        except Exception as exc:
             yield from self.write_response(Socks4Code.fail)
-            raise
+            raise SocksException from exc
         else:
             yield from self.write_response(Socks4Code.success)
             yield from self.io.passthrough()
@@ -96,9 +101,9 @@ class Socks4Client(BaseSocks4):
             yield from self.io.write_c_string(host)
         _, code, port, ipv4 = yield from self.io.read_struct(self.fmt)
         if code != Socks4Code.success:
-            raise ValueError(f"Code {code} not equal to 'success' code {Socks4Code.success}")
+            raise SocksException(f"Code {_hex(code)} not equal to 'success' code {_hex(Socks4Code.success)}")
         if port != 0 or not IPv4Address(ipv4).is_unspecified:
-            raise ValueError("Socks redirect is not supported")
+            raise SocksException("Socks redirect is not supported")
         yield from self.io.passthrough()
 
 
@@ -152,6 +157,8 @@ class BaseSocks5(AbstractSocks):
             host = IPv6Address(octets).compressed
         elif address_type == Socks5AddressType.domain:
             host = (yield from self.io.read_pascal_string())
+        else:
+            raise SocksException(f"Unknown address type {_hex(address_type)}")
         port = yield from self.io.read_struct("H")
         return command, host, port
 
@@ -181,18 +188,18 @@ class Socks5Server(BaseSocks5):
             auth_method = Socks5AuthMethod.no_acceptable
         yield from self.io.write_struct("BB", self.version, auth_method)
         if auth_method == Socks5AuthMethod.no_acceptable:
-            raise ValueError("No acceptible auth method")
+            raise SocksException("No acceptible auth method")
         if auth_method == Socks5AuthMethod.username_password:
             auth_version = yield from self.io.read_struct("B")
             if auth_version != 1:
-                raise ValueError(f"Username/password auth version {auth_version} not supported")
+                raise SocksException(f"Username/password auth version {_hex(auth_version)} not supported")
             received_username = yield from self.io.read_pascal_string()
             received_password = yield from self.io.read_pascal_string()
             auth_successful = received_username == username and received_password == password
             auth_return_code = 0 if auth_successful else 1
             yield from self.io.write_struct("BB", auth_version, auth_return_code)
             if not auth_successful:
-                raise ValueError("Wrong username or password")
+                raise SocksException("Wrong username or password")
 
     def run(self, username=None, password=None):
         version = yield from self.io.read_struct("B")
@@ -201,12 +208,12 @@ class Socks5Server(BaseSocks5):
         command, host, port = yield from self.read_command()
         if command != SocksCommand.tcp_connect:
             yield from self.write_command(Socks5Code.command_not_supported_or_protocol_error)
-            raise ValueError(f"Socks command {command} is not supported")
+            raise SocksException(f"Socks command {_hex(command)} is not supported")
         try:
             yield from self.io.connect(host, port)
-        except Exception:
+        except Exception as exc:
             yield from self.write_command(Socks5Code.general_failure)
-            raise
+            raise SocksException from exc
         else:
             yield from self.write_command(Socks5Code.request_granted)
             yield from self.io.passthrough()
@@ -224,16 +231,16 @@ class Socks5Client(BaseSocks5):
         version, code = yield from self.io.read_struct("BB")
         self.verify_version(version)
         if code != auth_method:
-            raise ValueError(f"Auth method {auth_method} not accepted with {code} code")
+            raise SocksException(f"Auth method {_hex(auth_method)} not accepted with {_hex(code)} code")
         if auth_method == Socks5AuthMethod.username_password:
             yield from self.io.write_struct("B", 1)
             yield from self.io.write_pascal_string(username)
             yield from self.io.write_pascal_string(password)
             auth_version, code = yield from self.io.read_struct("BB")
             if auth_version != 1:
-                raise ValueError(f"Username/password auth version {auth_version} not supported")
+                raise SocksException(f"Username/password auth version {_hex(auth_version)} not supported")
             if code != 0:
-                raise ValueError(f"Username/password auth failed with code {code}")
+                raise SocksException(f"Username/password auth failed with code {_hex(code)}")
 
     def run(self, host, port, username=None, password=None):
         yield from self.io.write_struct("B", self.version)
@@ -241,10 +248,10 @@ class Socks5Client(BaseSocks5):
         yield from self.write_command(SocksCommand.tcp_connect, host, port)
         code, host, port = yield from self.read_command()
         if code != Socks5Code.request_granted:
-            raise ValueError(f"Code {code} not equal to 'success' code {Socks5Code.request_granted}")
+            raise SocksException(f"Code {_hex(code)} not equal to 'success' code {_hex(Socks5Code.request_granted)}")
         # not sure if this is enough
         if port != 0:
-            raise ValueError("Socks redirect is not supported")
+            raise SocksException("Socks redirect is not supported")
         yield from self.io.passthrough()
 
 
@@ -252,30 +259,30 @@ def SocksServer(*, allowed_versions={4, 5}, username=None, password=None,
                 strict_security_policy=True, encoding=DEFAULT_ENCODING):
     auth_required = username is not None
     if 4 in allowed_versions and auth_required and strict_security_policy:
-        raise ValueError("Socks4 do not provide auth methods, "
-                         "but socks4 allowed and auth provided and "
-                         "strict security policy enabled")
+        raise SocksException("Socks4 do not provide auth methods, "
+                             "but socks4 allowed and auth provided and "
+                             "strict security policy enabled")
     io = SansIORW(encoding)
     version = yield from io.read_struct("B", put_back=True)
     if version not in allowed_versions:
-        raise ValueError(f"Version {version} is not in allowed {allowed_versions}")
+        raise SocksException(f"Version {version} is not in allowed {allowed_versions}")
     if version == 4:
         yield from Socks4Server(io).run()
     elif version == 5:
         yield from Socks5Server(io).run(username, password)
     else:
-        raise ValueError(f"Version {version} is not supported")
+        raise SocksException(f"Version {version} is not supported")
 
 
 def SocksClient(host, port, version, *, username=None, password=None, encoding=DEFAULT_ENCODING,
                 socks4_extras={}, socks5_extras={}):
     auth_required = username is not None
     if version == 4 and auth_required:
-        raise ValueError("Socks4 do not provide auth methods, but auth provided")
+        raise SocksException("Socks4 do not provide auth methods, but auth provided")
     io = SansIORW(encoding)
     if version == 4:
         yield from Socks4Client(io).run(host, port, **socks4_extras)
     elif version == 5:
         yield from Socks5Client(io).run(host, port, username, password, **socks5_extras)
     else:
-        raise ValueError(f"Version {version} is not supported")
+        raise SocksException(f"Version {version} is not supported")

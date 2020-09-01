@@ -3,6 +3,7 @@ from functools import partial
 import trio
 import pytest
 
+from siosocks.exceptions import SocksException
 from siosocks.io.trio import socks_server_handler, open_tcp_stream
 
 
@@ -59,6 +60,6 @@ async def test_connection_socks_success(nursery):
 async def test_connection_partly_passed_error(nursery):
     endpoint_port = await endpoint(nursery)
     socks_server_port = await socks(nursery)
-    with pytest.raises(ValueError):
+    with pytest.raises(SocksException):
         await open_tcp_stream(HOST, endpoint_port,
                               socks_host=HOST, socks_port=socks_server_port)

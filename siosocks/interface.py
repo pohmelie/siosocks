@@ -1,5 +1,6 @@
 import abc
 import contextlib
+from siosocks.exceptions import SocksException
 
 
 class AbstractSocksIO(abc.ABC):
@@ -34,14 +35,16 @@ def _common_engine(protocol, io):
     while True:
         try:
             message = generator_method(data)
+        except SocksException:
+            raise
         except StopIteration:
             break
         method = message.pop("method")
         try:
             generator_method = protocol.send
             data = yield getattr(io, method)(**message)
-        except Exception as e:
-            generator_method, data = protocol.throw, e
+        except Exception as exc:
+            generator_method, data = protocol.throw, exc
 
 
 async def async_engine(protocol, io):

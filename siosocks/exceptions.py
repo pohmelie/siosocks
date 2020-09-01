@@ -1,0 +1,2 @@
+class SocksException(Exception):
+    pass

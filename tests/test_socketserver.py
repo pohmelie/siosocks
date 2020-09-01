@@ -7,6 +7,7 @@ import pytest
 
 from siosocks.io.socket import socks_server_handler
 from siosocks.io.asyncio import open_connection
+from siosocks.exceptions import SocksException
 
 
 HOST = "127.0.0.1"
@@ -61,6 +62,6 @@ async def test_connection_socks_success(endpoint_port, socks_server_port):
 
 @pytest.mark.asyncio
 async def test_connection_partly_passed_error():
-    with pytest.raises(ValueError):
+    with pytest.raises(SocksException):
         await open_connection(HOST, endpoint_port,
                               socks_host=HOST, socks_port=socks_server_port)

@@ -1,6 +1,7 @@
 import asyncio
 import logging
 
+from ..exceptions import SocksException
 from ..interface import AbstractSocksIO, async_engine
 from ..protocol import SocksServer, SocksClient, DEFAULT_ENCODING
 from .const import DEFAULT_BLOCK_SIZE
@@ -94,8 +95,8 @@ async def open_connection(host=None, port=None, *, socks_host=None, socks_port=N
     socks_enabled = all(socks_required)
     socks_disabled = not any(socks_required)
     if socks_enabled == socks_disabled:
-        raise ValueError("Partly passed socks required arguments: "
-                         "socks_host = {!r}, socks_port = {!r}, socks_version = {!r}".format(*socks_required))
+        raise SocksException("Partly passed socks required arguments: "
+                             "socks_host = {!r}, socks_port = {!r}, socks_version = {!r}".format(*socks_required))
     if socks_enabled:
         reader, writer = await asyncio.open_connection(socks_host, socks_port, **open_connection_extras)
         protocol = SocksClient(host, port, socks_version, username=username, password=password, encoding=encoding,

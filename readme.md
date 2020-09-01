@@ -160,6 +160,30 @@ optional arguments:
                         username/password auth [default: False]
   -v, --version         Show siosocks version
 ```
+
+### Exceptions
+`siosocks` have unified exception for all types of socks-related errors:
+``` python
+import asyncio
+
+from siosocks.exceptions import SocksException
+from siosocks.io.asyncio import open_connection
+
+
+async def main():
+    try:
+        r, w = await open_connection("127.0.0.1", 80, socks_host="localhost", socks_port=9050, socks_version=5)
+    except SocksException:
+        ...
+    else:
+        # at this point all socks-related tasks done and returned reader and writer
+        # are just plain asyncio objects without any siosocks proxies
+
+
+loop = asyncio.get_event_loop()
+loop.run_until_complete(main())
+```
+
 ## Low-level
 Shadowsocks-like [client/server](https://github.com/pohmelie/siosocks/blob/master/examples/shadowsocks-like.py). Shadowsocks-like built on top of socks5 and encryption. It have «client», which is actually socks server and «server». So, precisely there are two servers: client side and server side. Purpose of shadowsocks is to encrypt data between «incoming» and «outgoing» servers. In common this looks like:
 ```

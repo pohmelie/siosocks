@@ -192,5 +192,6 @@ client (non-encrypted socks) «incoming» socks server (encrypted socks) «outgo
 Example above use Caesar cipher for simplicity (and security of course).
 
 # Roadmap/contibutions
-* [ ] add more backends (average)
-* [ ] speed up `passthrough` implementation (seems hard)
+- [ ] add more backends (average)
+- [ ] speed up `passthrough` implementation (seems hard)
+- [ ] add client redirection

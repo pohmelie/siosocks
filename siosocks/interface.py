@@ -1,5 +1,5 @@
 import abc
-import contextlib
+
 from siosocks.exceptions import SocksException
 
 
@@ -30,7 +30,7 @@ class AbstractSocksIO(abc.ABC):
         """
 
 
-def _common_engine(protocol, io):
+async def async_engine(protocol, io):
     generator_method, data = protocol.send, None
     while True:
         try:
@@ -42,22 +42,23 @@ def _common_engine(protocol, io):
         method = message.pop("method")
         try:
             generator_method = protocol.send
-            data = yield getattr(io, method)(**message)
+            data = await getattr(io, method)(**message)
         except Exception as exc:
             generator_method, data = protocol.throw, exc
 
 
-async def async_engine(protocol, io):
-    engine = _common_engine(protocol, io)
-    data = None
-    with contextlib.suppress(StopIteration):
-        while True:
-            data = await engine.send(data)
-
-
 def sync_engine(protocol, io):
-    engine = _common_engine(protocol, io)
-    data = None
-    with contextlib.suppress(StopIteration):
-        while True:
-            data = engine.send(data)
+    generator_method, data = protocol.send, None
+    while True:
+        try:
+            message = generator_method(data)
+        except SocksException:
+            raise
+        except StopIteration:
+            break
+        method = message.pop("method")
+        try:
+            generator_method = protocol.send
+            data = getattr(io, method)(**message)
+        except Exception as exc:
+            generator_method, data = protocol.throw, exc

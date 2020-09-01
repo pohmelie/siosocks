@@ -96,6 +96,7 @@ def test_client_socks4_connection_failed():
         rotor(SocksClient("127.0.0.1", 123, 4, socks4_extras=dict(user_id="yoba")), server())
 
 
+@pytest.mark.skip("this check removed")
 def test_client_socks4_redirect_not_supported_by_port():
 
     def server():
@@ -115,6 +116,7 @@ def test_client_socks4_redirect_not_supported_by_port():
         rotor(SocksClient("127.0.0.1", 123, 4, socks4_extras=dict(user_id="yoba")), server())
 
 
+@pytest.mark.skip("this check removed")
 def test_client_socks4_redirect_not_supported_by_host():
 
     def server():
@@ -379,6 +381,7 @@ def test_client_socks5_command_request_not_granted():
         rotor(SocksClient("127.0.0.1", 666, 5), server())
 
 
+@pytest.mark.skip("this check removed")
 def test_client_socks5_command_redirect_is_not_allowed():
 
     def server():

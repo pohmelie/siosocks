@@ -99,11 +99,9 @@ class Socks4Client(BaseSocks4):
         yield from self.io.write_c_string(user_id)
         if self.domain_flag_value_low <= ipv4 <= self.domain_flag_value_high:
             yield from self.io.write_c_string(host)
-        _, code, port, ipv4 = yield from self.io.read_struct(self.fmt)
+        _, code, *_ = yield from self.io.read_struct(self.fmt)
         if code != Socks4Code.success:
             raise SocksException(f"Code {_hex(code)} not equal to 'success' code {_hex(Socks4Code.success)}")
-        if port != 0 or not IPv4Address(ipv4).is_unspecified:
-            raise SocksException("Socks redirect is not supported")
         yield from self.io.passthrough()
 
 
@@ -246,12 +244,9 @@ class Socks5Client(BaseSocks5):
         yield from self.io.write_struct("B", self.version)
         yield from self.auth(username, password)
         yield from self.write_command(SocksCommand.tcp_connect, host, port)
-        code, host, port = yield from self.read_command()
+        code, *_ = yield from self.read_command()
         if code != Socks5Code.request_granted:
             raise SocksException(f"Code {_hex(code)} not equal to 'success' code {_hex(Socks5Code.request_granted)}")
-        # not sure if this is enough
-        if port != 0:
-            raise SocksException("Socks redirect is not supported")
         yield from self.io.passthrough()
 
 

@@ -46,6 +46,18 @@ if 4 in socks_versions and ns.username is not None:
 
 
 def asyncio_main(socks_versions, family, ns):
+
+    async def main():
+        server = await asyncio.start_server(handler, host=ns.host, port=ns.port, family=family)
+        addresses = []
+        for sock in server.sockets:
+            if sock.family in (socket.AF_INET, socket.AF_INET6):
+                host, port, *_ = sock.getsockname()
+                addresses.append(f"{host}:{port}")
+        print(f"Socks{socks_versions} proxy serving on {', '.join(addresses)}")
+        with contextlib.suppress(KeyboardInterrupt):
+            await server.serve_forever()
+
     handler = functools.partial(
         asyncio_socks_server_handler,
         allowed_versions=socks_versions,
@@ -54,17 +66,8 @@ def asyncio_main(socks_versions, family, ns):
         strict_security_policy=not ns.no_strict,
         encoding=ns.encoding,
     )
-    loop = asyncio.get_event_loop()
-    coro = asyncio.start_server(handler, host=ns.host, port=ns.port, family=family)
-    server = loop.run_until_complete(coro)
-    addresses = []
-    for sock in server.sockets:
-        if sock.family in (socket.AF_INET, socket.AF_INET6):
-            host, port, *_ = sock.getsockname()
-            addresses.append(f"{host}:{port}")
-    print(f"Socks{socks_versions} proxy serving on {', '.join(addresses)}")
     with contextlib.suppress(KeyboardInterrupt):
-        loop.run_forever()
+        return asyncio.run(main())
 
 
 def socketserver_main(socks_versions, family, ns):

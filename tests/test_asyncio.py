@@ -1,6 +1,7 @@
 import asyncio
 
 import pytest
+import pytest_asyncio
 
 from siosocks.io.asyncio import socks_server_handler, open_connection
 from siosocks.exceptions import SocksException
@@ -10,7 +11,7 @@ HOST = "127.0.0.1"
 MESSAGE = b"socks work!"
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def endpoint_port(unused_tcp_port_factory):
     port = unused_tcp_port_factory()
 
@@ -26,7 +27,7 @@ async def endpoint_port(unused_tcp_port_factory):
     await server.wait_closed()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def socks_server_port(unused_tcp_port_factory):
     port = unused_tcp_port_factory()
     server = await asyncio.start_server(socks_server_handler, HOST, port)

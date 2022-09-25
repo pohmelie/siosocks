@@ -4,6 +4,7 @@ import threading
 from functools import partial
 
 import pytest
+import pytest_asyncio
 
 from siosocks.io.socket import socks_server_handler
 from siosocks.io.asyncio import open_connection
@@ -14,7 +15,7 @@ HOST = "127.0.0.1"
 MESSAGE = b"socks work!"
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def endpoint_port(unused_tcp_port_factory):
     port = unused_tcp_port_factory()
 

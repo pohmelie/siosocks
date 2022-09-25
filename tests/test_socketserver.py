@@ -31,17 +31,17 @@ async def endpoint_port(unused_tcp_port_factory):
     await server.wait_closed()
 
 
-@pytest.fixture
-def socks_server_port(unused_tcp_port_factory):
+@pytest_asyncio.fixture
+async def socks_server_port(unused_tcp_port_factory):
     port = unused_tcp_port_factory()
     handler = partial(socks_server_handler, socks_protocol_kw={})
-    with socketserver.ThreadingTCPServer((HOST, port), handler) as server:
-        server.socket.settimeout(0.5)
-        thread = threading.Thread(target=server.serve_forever, args=[0.01])
-        thread.start()
-        yield port
-        server.shutdown()
-        thread.join()
+    server = socketserver.ThreadingTCPServer((HOST, port), handler)
+    server.socket.settimeout(0.5)
+    thread = threading.Thread(target=server.serve_forever, args=[0.01])
+    thread.start()
+    yield port
+    server.shutdown()
+    thread.join()
 
 
 @pytest.mark.asyncio
@@ -62,7 +62,7 @@ async def test_connection_socks_success(endpoint_port, socks_server_port):
 
 
 @pytest.mark.asyncio
-async def test_connection_partly_passed_error():
+async def test_connection_partly_passed_error(endpoint_port, socks_server_port):
     with pytest.raises(SocksException):
         await open_connection(HOST, endpoint_port,
                               socks_host=HOST, socks_port=socks_server_port)

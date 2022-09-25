@@ -1,5 +1,5 @@
 # siosocks
-[![Github actions status for master branch](https://github.com/pohmelie/siosocks/actions/workflows/ci.yml/badge.svg?branch=master)(https://github.com/pohmelie/siosocks/actions)
+[![Github actions status for master branch](https://github.com/pohmelie/siosocks/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/pohmelie/siosocks/actions)
 [![Codecov coverage for master branch](https://codecov.io/gh/pohmelie/siosocks/branch/master/graph/badge.svg)](https://codecov.io/gh/pohmelie/siosocks)
 [![Pypi version](https://img.shields.io/pypi/v/siosocks.svg)](https://pypi.org/project/siosocks/)
 [![Pypi downloads count](https://img.shields.io/pypi/dm/siosocks)](https://pypi.org/project/siosocks/)

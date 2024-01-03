@@ -14,7 +14,7 @@
 - Fun
 
 # Features
-- Only tcp connect (no bind or udp associate)
+- Only tcp connect (no tcp bind or udp associate)
 - Both client and server
 - Socks versions: 4, 4a, 5
 - Socks5 auth: no auth, username/password
@@ -25,7 +25,7 @@
 `siosocks` is offered under MIT license.
 
 # Requirements
-- python 3.8+
+- python 3.11+
 
 # IO implementation matrix
 
@@ -106,9 +106,7 @@ async def main():
     print(await r.read(8192))
     w.close()
 
-
-loop = asyncio.get_event_loop()
-loop.run_until_complete(main())
+asyncio.run(main())
 ```
 ### Server
 ``` python
@@ -180,8 +178,7 @@ async def main():
         # are just plain asyncio objects without any siosocks proxies
 
 
-loop = asyncio.get_event_loop()
-loop.run_until_complete(main())
+asyncio.run(main())
 ```
 
 ## Low-level
@@ -192,6 +189,7 @@ client (non-encrypted socks) «incoming» socks server (encrypted socks) «outgo
 Example above use Caesar cipher for simplicity (and security of course).
 
 # Roadmap/contibutions
+- [ ] add tcp bind
+- [ ] add udp associate
 - [ ] add more backends (average)
 - [ ] speed up `passthrough` implementation (seems hard)
-- [ ] add client redirection

@@ -188,8 +188,7 @@ client (non-encrypted socks) «incoming» socks server (encrypted socks) «outgo
 ```
 Example above use Caesar cipher for simplicity (and security of course).
 
-# Roadmap/contibutions
-- [ ] add tcp bind
-- [ ] add udp associate
+# Contributions
 - [ ] add more backends (average)
 - [ ] speed up `passthrough` implementation (seems hard)
+- [ ] full protocol implementation (#4)

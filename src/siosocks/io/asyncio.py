@@ -3,15 +3,13 @@ import logging
 
 from ..exceptions import SocksException
 from ..interface import AbstractSocksIO, async_engine
-from ..protocol import SocksServer, SocksClient, DEFAULT_ENCODING
+from ..protocol import DEFAULT_ENCODING, SocksClient, SocksServer
 from .const import DEFAULT_BLOCK_SIZE
-
 
 logger = logging.getLogger(__name__)
 
 
 class ServerIO(AbstractSocksIO):
-
     def __init__(self, reader, writer):
         self.incoming_reader = reader
         self.incoming_writer = writer
@@ -69,7 +67,6 @@ async def socks_server_handler(reader, writer, **kwargs):
 
 
 class ClientIO(AbstractSocksIO):
-
     def __init__(self, reader, writer):
         self.r = reader
         self.w = writer
@@ -88,19 +85,40 @@ class ClientIO(AbstractSocksIO):
         return
 
 
-async def open_connection(host=None, port=None, *, socks_host=None, socks_port=None,
-                          socks_version=None, username=None, password=None, encoding=DEFAULT_ENCODING,
-                          socks4_extras={}, socks5_extras={}, **open_connection_extras):
+async def open_connection(
+    host=None,
+    port=None,
+    *,
+    socks_host=None,
+    socks_port=None,
+    socks_version=None,
+    username=None,
+    password=None,
+    encoding=DEFAULT_ENCODING,
+    socks4_extras={},
+    socks5_extras={},
+    **open_connection_extras,
+):
     socks_required = socks_host, socks_port, socks_version
     socks_enabled = all(socks_required)
     socks_disabled = not any(socks_required)
     if socks_enabled == socks_disabled:
-        raise SocksException("Partly passed socks required arguments: "
-                             "socks_host = {!r}, socks_port = {!r}, socks_version = {!r}".format(*socks_required))
+        raise SocksException(
+            "Partly passed socks required arguments: "
+            "socks_host = {!r}, socks_port = {!r}, socks_version = {!r}".format(*socks_required),
+        )
     if socks_enabled:
         reader, writer = await asyncio.open_connection(socks_host, socks_port, **open_connection_extras)
-        protocol = SocksClient(host, port, socks_version, username=username, password=password, encoding=encoding,
-                               socks4_extras=socks4_extras, socks5_extras=socks5_extras)
+        protocol = SocksClient(
+            host,
+            port,
+            socks_version,
+            username=username,
+            password=password,
+            encoding=encoding,
+            socks4_extras=socks4_extras,
+            socks5_extras=socks5_extras,
+        )
         io = ClientIO(reader, writer)
         await async_engine(protocol, io)
     else:

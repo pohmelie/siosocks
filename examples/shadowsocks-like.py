@@ -4,9 +4,9 @@ import contextlib
 import functools
 import socket
 
-from siosocks.io.asyncio import ServerIO, ClientIO
 from siosocks.interface import async_engine
-from siosocks.protocol import SocksServer, SocksClient
+from siosocks.io.asyncio import ClientIO, ServerIO
+from siosocks.protocol import SocksClient, SocksServer
 
 
 # This is very strong encryption method, believe me!
@@ -19,7 +19,6 @@ def decode(data: bytes):
 
 
 class CommonProxy:
-
     def __init__(self, proxied):
         self._proxied = proxied
 
@@ -28,19 +27,16 @@ class CommonProxy:
 
 
 class IncomingDecoder(CommonProxy):
-
     async def read(self, count):
         return decode(await self._proxied.read(count))
 
 
 class OutgoingEncoder(CommonProxy):
-
     def write(self, data):
         return self._proxied.write(encode(data))
 
 
 class RemoteIO(ServerIO):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.incoming_reader = IncomingDecoder(self.incoming_reader)
@@ -58,17 +54,19 @@ async def open_connection(host=None, port=None, *, socks_host=None, socks_port=N
 
 
 class LocalIO(ServerIO):
-
     def __init__(self, *args, remote_host, remote_port, **kwargs):
         super().__init__(*args, **kwargs)
         self.__remote_host = remote_host
         self.__remote_port = remote_port
 
     async def connect(self, host, port):
-        self.outgoing_reader, self.outgoing_writer = await open_connection(host, port,
-                                                                           socks_host=self.__remote_host,
-                                                                           socks_port=self.__remote_port,
-                                                                           socks_version=5)
+        self.outgoing_reader, self.outgoing_writer = await open_connection(
+            host,
+            port,
+            socks_host=self.__remote_host,
+            socks_port=self.__remote_port,
+            socks_version=5,
+        )
 
 
 async def socks_server_handler(reader, writer, *, io_factory, **kwargs):

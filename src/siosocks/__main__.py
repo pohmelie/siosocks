@@ -1,32 +1,47 @@
 import argparse
-import sys
+import asyncio
+import contextlib
 import functools
 import socket
-import asyncio
 import socketserver
-import contextlib
+import sys
 
 from . import __version__
 from .io.asyncio import socks_server_handler as asyncio_socks_server_handler
 from .io.socket import socks_server_handler as socket_socks_server_handler
 from .protocol import DEFAULT_ENCODING
 
-
 parser = argparse.ArgumentParser("siosocks", description="Socks proxy server")
-parser.add_argument("--backend", default="asyncio", choices=["asyncio", "socketserver", "trio"],
-                    help="Socks server backend [default: %(default)s]")
+parser.add_argument(
+    "--backend",
+    default="asyncio",
+    choices=["asyncio", "socketserver", "trio"],
+    help="Socks server backend [default: %(default)s]",
+)
 parser.add_argument("--host", default=None, help="Socks server host [default: %(default)s]")
 parser.add_argument("--port", default=1080, type=int, help="Socks server port [default: %(default)s]")
-parser.add_argument("--family", choices=("ipv4", "ipv6", "auto"), default="auto",
-                    help="Socket family [default: %(default)s]")
-parser.add_argument("--socks", action="append", type=int, default=[],
-                    help="Socks protocol version [default: %(default)s]")
+parser.add_argument(
+    "--family",
+    choices=("ipv4", "ipv6", "auto"),
+    default="auto",
+    help="Socket family [default: %(default)s]",
+)
+parser.add_argument(
+    "--socks",
+    action="append",
+    type=int,
+    default=[],
+    help="Socks protocol version [default: %(default)s]",
+)
 parser.add_argument("--username", default=None, help="Socks auth username [default: %(default)s]")
 parser.add_argument("--password", default=None, help="Socks auth password [default: %(default)s]")
 parser.add_argument("--encoding", default=DEFAULT_ENCODING, help="String encoding [default: %(default)s]")
-parser.add_argument("--no-strict", default=False, action="store_true",
-                    help="Allow multiversion socks server, when socks5 used with username/password auth "
-                         "[default: %(default)s]")
+parser.add_argument(
+    "--no-strict",
+    default=False,
+    action="store_true",
+    help="Allow multiversion socks server, when socks5 used with username/password auth " "[default: %(default)s]",
+)
 parser.add_argument("-v", "--version", action="store_true", help="Show siosocks version")
 ns = parser.parse_args()
 if ns.version:
@@ -40,13 +55,14 @@ family = {
 }[ns.family]
 socks_versions = set(ns.socks) or {4, 5}
 if 4 in socks_versions and ns.username is not None:
-    print("Socks4 do not provide auth methods, but socks4 allowed "
-          "and auth required and strict security policy enabled")
+    print(
+        "Socks4 do not provide auth methods, but socks4 allowed "
+        "and auth required and strict security policy enabled",
+    )
     sys.exit(1)
 
 
 def asyncio_main(socks_versions, family, ns):
-
     async def main():
         server = await asyncio.start_server(handler, host=ns.host, port=ns.port, family=family)
         addresses = []
@@ -91,6 +107,7 @@ def socketserver_main(socks_versions, family, ns):
 
 def trio_main(socks_versions, family, ns):
     import trio
+
     from .io.trio import socks_server_handler as trio_socks_server_handler
 
     async def main():

@@ -3,9 +3,8 @@ import asyncio
 import pytest
 import pytest_asyncio
 
-from siosocks.io.asyncio import socks_server_handler, open_connection
 from siosocks.exceptions import SocksException
-
+from siosocks.io.asyncio import open_connection, socks_server_handler
 
 HOST = "127.0.0.1"
 MESSAGE = b"socks work!"
@@ -46,8 +45,13 @@ async def test_connection_direct_success(endpoint_port):
 
 @pytest.mark.asyncio
 async def test_connection_socks_success(endpoint_port, socks_server_port):
-    r, w = await open_connection(HOST, endpoint_port,
-                                 socks_host=HOST, socks_port=socks_server_port, socks_version=4)
+    r, w = await open_connection(
+        HOST,
+        endpoint_port,
+        socks_host=HOST,
+        socks_port=socks_server_port,
+        socks_version=4,
+    )
     w.write(MESSAGE)
     m = await r.read(8192)
     assert m == MESSAGE
@@ -56,12 +60,21 @@ async def test_connection_socks_success(endpoint_port, socks_server_port):
 @pytest.mark.asyncio
 async def test_connection_socks_failed(socks_server_port, unused_tcp_port):
     with pytest.raises(SocksException):
-        await open_connection(HOST, unused_tcp_port,
-                              socks_host=HOST, socks_port=socks_server_port, socks_version=4)
+        await open_connection(
+            HOST,
+            unused_tcp_port,
+            socks_host=HOST,
+            socks_port=socks_server_port,
+            socks_version=4,
+        )
 
 
 @pytest.mark.asyncio
 async def test_connection_partly_passed_error(endpoint_port, socks_server_port):
     with pytest.raises(SocksException):
-        await open_connection(HOST, endpoint_port,
-                              socks_host=HOST, socks_port=socks_server_port)
+        await open_connection(
+            HOST,
+            endpoint_port,
+            socks_host=HOST,
+            socks_port=socks_server_port,
+        )

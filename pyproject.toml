@@ -1,0 +1,66 @@
+[project]
+name = "siosocks"
+version = "0.3.0"
+description = "sans-io socks proxy client/server with couple io backends"
+readme = "readme.md"
+requires-python = ">= 3.11"
+license = {file = "license.txt"}
+authors = [
+    {name = "pohmelie", email = "multisosnooley@gmail.com"},
+]
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+
+[project.urls]
+Github = "https://github.com/pohmelie/siosocks"
+
+[project.optional-dependencies]
+dev = [
+    # tests
+    "pytest-asyncio",
+    "pytest-cov",
+    "pytest-trio",
+    "pytest",
+    "trio",
+
+    # linters
+    "pre-commit",
+    "black",
+    "ruff",
+]
+trio = [
+    "trio",
+]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages.find.where = ["src"]
+
+# tools
+[tool.black]
+line-length = 120
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+select = ["E", "W", "F", "Q", "UP", "I", "ASYNC"]
+src = ["src"]
+
+[tool.coverage]
+run.source = ["./src/siosocks"]
+run.omit = ["./src/siosocks/__main__.py"]
+report.show_missing = true
+
+[tool.pytest.ini_options]
+addopts = "-x --durations 10 -p no:anyio --cov"
+testpaths = "tests"
+log_format = "%(asctime)s.%(msecs)03d %(name)-20s %(levelname)-8s %(filename)-15s %(lineno)-4d %(message)s"
+log_date_format = "%H:%M:%S"
+log_level = "DEBUG"
+asyncio_mode = "strict"

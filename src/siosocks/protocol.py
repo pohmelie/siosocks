@@ -1,11 +1,10 @@
 import abc
-import enum
 import contextlib
+import enum
 from ipaddress import IPv4Address, IPv6Address
 
 from .exceptions import SocksException
 from .sansio import SansIORW
-
 
 DEFAULT_ENCODING = "utf-8"
 
@@ -21,7 +20,6 @@ class SocksCommand(enum.IntEnum):
 
 
 class AbstractSocks(abc.ABC):
-
     def __init__(self, io):
         self.io = io
 
@@ -44,12 +42,11 @@ class AbstractSocks(abc.ABC):
 
 
 class Socks4Code(enum.IntEnum):
-    success = 0x5a
-    fail = 0x5b
+    success = 0x5A
+    fail = 0x5B
 
 
 class BaseSocks4(AbstractSocks):
-
     @property
     def version(self):
         return 4
@@ -61,7 +58,6 @@ class BaseSocks4(AbstractSocks):
 
 
 class Socks4Server(BaseSocks4):
-
     def write_response(self, code):
         yield from self.io.write_struct(self.fmt, 0, code, 0, self.this_network.packed)
 
@@ -87,7 +83,6 @@ class Socks4Server(BaseSocks4):
 
 
 class Socks4Client(BaseSocks4):
-
     def resolve_host(self, host):
         with contextlib.suppress(ValueError):
             return IPv4Address(host)
@@ -109,7 +104,7 @@ class Socks5AuthMethod(enum.IntEnum):
     no_auth = 0x00
     gssapi = 0x01
     username_password = 0x02
-    no_acceptable = 0xff
+    no_acceptable = 0xFF
 
 
 class Socks5AddressType(enum.IntEnum):
@@ -131,7 +126,6 @@ class Socks5Code(enum.IntEnum):
 
 
 class BaseSocks5(AbstractSocks):
-
     @property
     def version(self):
         return 5
@@ -154,7 +148,7 @@ class BaseSocks5(AbstractSocks):
             octets = yield from self.io.read_struct("16s")
             host = IPv6Address(octets).compressed
         elif address_type == Socks5AddressType.domain:
-            host = (yield from self.io.read_pascal_string())
+            host = yield from self.io.read_pascal_string()
         else:
             raise SocksException(f"Unknown address type {_hex(address_type)}")
         port = yield from self.io.read_struct("H")
@@ -173,7 +167,6 @@ class BaseSocks5(AbstractSocks):
 
 
 class Socks5Server(BaseSocks5):
-
     def auth(self, username, password):
         auth_methods_count = yield from self.io.read_struct("B")
         auth_methods = yield from self.io.read_exactly(auth_methods_count)
@@ -218,7 +211,6 @@ class Socks5Server(BaseSocks5):
 
 
 class Socks5Client(BaseSocks5):
-
     def auth(self, username, password):
         auth_required = username is not None
         if auth_required:
@@ -250,13 +242,16 @@ class Socks5Client(BaseSocks5):
         yield from self.io.passthrough()
 
 
-def SocksServer(*, allowed_versions={4, 5}, username=None, password=None,
-                strict_security_policy=True, encoding=DEFAULT_ENCODING):
+def SocksServer(
+    *, allowed_versions={4, 5}, username=None, password=None, strict_security_policy=True, encoding=DEFAULT_ENCODING
+):
     auth_required = username is not None
     if 4 in allowed_versions and auth_required and strict_security_policy:
-        raise SocksException("Socks4 do not provide auth methods, "
-                             "but socks4 allowed and auth provided and "
-                             "strict security policy enabled")
+        raise SocksException(
+            "Socks4 do not provide auth methods, "
+            "but socks4 allowed and auth provided and "
+            "strict security policy enabled",
+        )
     io = SansIORW(encoding)
     version = yield from io.read_struct("B", put_back=True)
     if version not in allowed_versions:
@@ -269,8 +264,9 @@ def SocksServer(*, allowed_versions={4, 5}, username=None, password=None,
         raise SocksException(f"Version {version} is not supported")
 
 
-def SocksClient(host, port, version, *, username=None, password=None, encoding=DEFAULT_ENCODING,
-                socks4_extras={}, socks5_extras={}):
+def SocksClient(
+    host, port, version, *, username=None, password=None, encoding=DEFAULT_ENCODING, socks4_extras={}, socks5_extras={}
+):
     auth_required = username is not None
     if version == 4 and auth_required:
         raise SocksException("Socks4 do not provide auth methods, but auth provided")

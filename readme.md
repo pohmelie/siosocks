@@ -14,7 +14,7 @@
 - Fun
 
 # Features
-- Only tcp connect (no bind, no udp)
+- Only tcp connect (no bind or udp associate)
 - Both client and server
 - Socks versions: 4, 4a, 5
 - Socks5 auth: no auth, username/password

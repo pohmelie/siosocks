@@ -1,14 +1,12 @@
 import pytest
 
-from siosocks.sansio import SansIORW
 from siosocks.exceptions import SocksException
+from siosocks.sansio import SansIORW
 
 
 @pytest.fixture
 def io():
-
     class IO:
-
         def __init__(self):
             self.buffer = []
             self.io = SansIORW(encoding="utf-8")
@@ -26,7 +24,6 @@ def io():
             self.buffer.append(data)
 
         def __getattr__(self, name):
-
             def wrapper(*args, **kwargs):
                 gen = getattr(self.io, name)(*args, **kwargs)
                 method, data = gen.send, None

@@ -1,4 +1,0 @@
-[report]
-show_missing = True
-omit =
-    siosocks/__main__.py

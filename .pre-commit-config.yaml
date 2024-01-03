@@ -1,0 +1,50 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+
+.python-linters: &python-linters
+  pass_filenames: false
+  fail_fast: true
+  language: system
+  types: [python]
+
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.5.0
+  hooks:
+  - id: check-ast
+    fail_fast: true
+  - id: trailing-whitespace
+  - id: check-toml
+    fail_fast: true
+  - id: end-of-file-fixer
+    fail_fast: true
+
+- repo: https://github.com/asottile/add-trailing-comma
+  rev: v2.1.0
+  hooks:
+  - id: add-trailing-comma
+    fail_fast: true
+
+- repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
+  rev: v2.1.0
+  hooks:
+  - id: pretty-format-yaml
+    fail_fast: true
+    args:
+    - --autofix
+    - --preserve-quotes
+    - --indent=2
+
+- repo: local
+  hooks:
+  - <<: *python-linters
+    id: black
+    name: Format with Black
+    entry: black
+    args: ["."]
+
+  - <<: *python-linters
+    id: ruff
+    name: Check with ruff
+    entry: ruff
+    args: ["check", "--fix", "."]

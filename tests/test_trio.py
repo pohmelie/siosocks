@@ -1,11 +1,10 @@
 from functools import partial
 
-import trio
 import pytest
+import trio
 
 from siosocks.exceptions import SocksException
-from siosocks.io.trio import socks_server_handler, open_tcp_stream
-
+from siosocks.io.trio import open_tcp_stream, socks_server_handler
 
 # TODO: Use fixtures after https://github.com/pytest-dev/pytest-asyncio/issues/124 resolved
 
@@ -14,7 +13,6 @@ MESSAGE = b"socks work!"
 
 
 async def endpoint(nursery):
-
     async def handler(stream):
         async with stream:
             while True:
@@ -48,8 +46,13 @@ async def test_connection_direct_success(nursery):
 async def test_connection_socks_success(nursery):
     endpoint_port = await endpoint(nursery)
     socks_server_port = await socks(nursery)
-    stream = await open_tcp_stream(HOST, endpoint_port,
-                                   socks_host=HOST, socks_port=socks_server_port, socks_version=4)
+    stream = await open_tcp_stream(
+        HOST,
+        endpoint_port,
+        socks_host=HOST,
+        socks_port=socks_server_port,
+        socks_version=4,
+    )
     async with stream:
         await stream.send_all(MESSAGE)
         m = await stream.receive_some(8192)
@@ -61,5 +64,9 @@ async def test_connection_partly_passed_error(nursery):
     endpoint_port = await endpoint(nursery)
     socks_server_port = await socks(nursery)
     with pytest.raises(SocksException):
-        await open_tcp_stream(HOST, endpoint_port,
-                              socks_host=HOST, socks_port=socks_server_port)
+        await open_tcp_stream(
+            HOST,
+            endpoint_port,
+            socks_host=HOST,
+            socks_port=socks_server_port,
+        )

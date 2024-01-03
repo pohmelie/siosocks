@@ -2,12 +2,10 @@ import struct
 
 from .exceptions import SocksException
 
-
-MAX_STRING_SIZE = 2 ** 10
+MAX_STRING_SIZE = 2**10
 
 
 class SansIORW:
-
     def __init__(self, encoding):
         self.buffer = b""
         self.encoding = encoding

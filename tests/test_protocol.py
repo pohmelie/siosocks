@@ -13,7 +13,6 @@ class ConnectionFailed(Exception):
 
 
 class Node:
-
     def __init__(self, generator):
         self.generator = generator
         self.receive = [None]
@@ -58,7 +57,6 @@ def rotor(client, server, *, fail_connection=False):
 
 
 def test_client_bad_socks_version():
-
     def server():
         io = SansIORW(encoding="utf-8")
         yield from io.read_exactly(1)
@@ -68,7 +66,6 @@ def test_client_bad_socks_version():
 
 
 def test_client_socks4_and_auth():
-
     def server():
         io = SansIORW(encoding="utf-8")
         yield from io.read_exactly(1)
@@ -78,7 +75,6 @@ def test_client_socks4_and_auth():
 
 
 def test_client_socks4_connection_failed():
-
     def server():
         io = SansIORW(encoding="utf-8")
         version, command, port, ipv4 = yield from io.read_struct("BBH4s")
@@ -89,7 +85,7 @@ def test_client_socks4_connection_failed():
         user_id = yield from io.read_c_string()
         assert user_id == "yoba"
         yield from io.connect(ipv4, port)
-        yield from io.write_struct("BBH4s", 0, 0x5b, 0, b"\x00" * 4)
+        yield from io.write_struct("BBH4s", 0, 0x5B, 0, b"\x00" * 4)
         yield from io.passthrough()
 
     with pytest.raises(SocksException):
@@ -98,7 +94,6 @@ def test_client_socks4_connection_failed():
 
 @pytest.mark.skip("this check removed")
 def test_client_socks4_redirect_not_supported_by_port():
-
     def server():
         io = SansIORW(encoding="utf-8")
         version, command, port, ipv4 = yield from io.read_struct("BBH4s")
@@ -109,7 +104,7 @@ def test_client_socks4_redirect_not_supported_by_port():
         user_id = yield from io.read_c_string()
         assert user_id == "yoba"
         yield from io.connect(ipv4, port)
-        yield from io.write_struct("BBH4s", 0, 0x5a, 666, b"\x00" * 4)
+        yield from io.write_struct("BBH4s", 0, 0x5A, 666, b"\x00" * 4)
         yield from io.passthrough()
 
     with pytest.raises(SocksException):
@@ -118,7 +113,6 @@ def test_client_socks4_redirect_not_supported_by_port():
 
 @pytest.mark.skip("this check removed")
 def test_client_socks4_redirect_not_supported_by_host():
-
     def server():
         io = SansIORW(encoding="utf-8")
         version, command, port, ipv4 = yield from io.read_struct("BBH4s")
@@ -129,7 +123,7 @@ def test_client_socks4_redirect_not_supported_by_host():
         user_id = yield from io.read_c_string()
         assert user_id == "yoba"
         yield from io.connect(ipv4, port)
-        yield from io.write_struct("BBH4s", 0, 0x5a, 0, b"\x7f\x00\x00\x01")
+        yield from io.write_struct("BBH4s", 0, 0x5A, 0, b"\x7f\x00\x00\x01")
         yield from io.passthrough()
 
     with pytest.raises(SocksException):
@@ -137,7 +131,6 @@ def test_client_socks4_redirect_not_supported_by_host():
 
 
 def test_client_socks4_success_by_ipv4():
-
     def server():
         io = SansIORW(encoding="utf-8")
         version, command, port, ipv4 = yield from io.read_struct("BBH4s")
@@ -148,14 +141,13 @@ def test_client_socks4_success_by_ipv4():
         user_id = yield from io.read_c_string()
         assert user_id == ""
         yield from io.connect(ipv4, port)
-        yield from io.write_struct("BBH4s", 0, 0x5a, 0, b"\x00" * 4)
+        yield from io.write_struct("BBH4s", 0, 0x5A, 0, b"\x00" * 4)
         yield from io.passthrough()
 
     rotor(SocksClient("127.0.0.1", 123, 4), server())
 
 
 def test_client_socks4_success_by_host():
-
     def server():
         io = SansIORW(encoding="utf-8")
         version, command, port, ipv4 = yield from io.read_struct("BBH4s")
@@ -168,14 +160,13 @@ def test_client_socks4_success_by_host():
         host = yield from io.read_c_string()
         assert host == "python.org"
         yield from io.connect(host, port)
-        yield from io.write_struct("BBH4s", 0, 0x5a, 0, b"\x00" * 4)
+        yield from io.write_struct("BBH4s", 0, 0x5A, 0, b"\x00" * 4)
         yield from io.passthrough()
 
     rotor(SocksClient("python.org", 123, 4), server())
 
 
 def test_server_socks4_auth_required():
-
     def client():
         io = SansIORW(encoding="utf-8")
         yield from io.write(b"\x04")
@@ -186,7 +177,6 @@ def test_server_socks4_auth_required():
 
 
 def test_server_socks_bad_socks_version():
-
     def client():
         io = SansIORW(encoding="utf-8")
         yield from io.write(b"\x06")
@@ -197,7 +187,6 @@ def test_server_socks_bad_socks_version():
 
 
 def test_server_socks_bad_socks_version_but_allowed():
-
     def client():
         io = SansIORW(encoding="utf-8")
         yield from io.write(b"\x06")
@@ -208,7 +197,6 @@ def test_server_socks_bad_socks_version_but_allowed():
 
 
 def test_server_socks4_unsupported_command():
-
     def client():
         io = SansIORW(encoding="utf-8")
         yield from io.write_struct("BBH4s", 4, 2, 123, b"\x7f\x00\x00\x01")
@@ -220,14 +208,13 @@ def test_server_socks4_unsupported_command():
 
 
 def test_server_socks4_connect_failed():
-
     def client():
         io = SansIORW(encoding="utf-8")
         yield from io.write_struct("BBH4s", 4, 1, 123, b"\x7f\x00\x00\x01")
         yield from io.write_c_string("yoba")
         prefix, code, port, ipv4 = yield from io.read_struct("BBH4s")
         assert prefix == 0
-        assert code == 0x5b
+        assert code == 0x5B
         assert port == 0
         assert ipv4 == b"\x00" * 4
         raise RuntimeError("connection failed")
@@ -237,14 +224,13 @@ def test_server_socks4_connect_failed():
 
 
 def test_server_socks4_success_by_ipv4():
-
     def client():
         io = SansIORW(encoding="utf-8")
         yield from io.write_struct("BBH4s", 4, 1, 123, b"\x7f\x00\x00\x01")
         yield from io.write_c_string("yoba")
         prefix, code, port, ipv4 = yield from io.read_struct("BBH4s")
         assert prefix == 0
-        assert code == 0x5a
+        assert code == 0x5A
         assert port == 0
         assert ipv4 == b"\x00" * 4
         yield from io.passthrough()
@@ -253,7 +239,6 @@ def test_server_socks4_success_by_ipv4():
 
 
 def test_server_socks4_success_by_host():
-
     def client():
         io = SansIORW(encoding="utf-8")
         yield from io.write_struct("BBH4s", 4, 1, 123, b"\x00\x00\x00\x01")
@@ -261,7 +246,7 @@ def test_server_socks4_success_by_host():
         yield from io.write_c_string("python.org")
         prefix, code, port, ipv4 = yield from io.read_struct("BBH4s")
         assert prefix == 0
-        assert code == 0x5a
+        assert code == 0x5A
         assert port == 0
         assert ipv4 == b"\x00" * 4
         yield from io.passthrough()
@@ -270,7 +255,6 @@ def test_server_socks4_success_by_host():
 
 
 def test_client_socks5_request_auth_bad_version():
-
     def server():
         io = SansIORW(encoding="utf-8")
         version, one, auth_method = yield from io.read_struct("BBB")
@@ -285,7 +269,6 @@ def test_client_socks5_request_auth_bad_version():
 
 
 def test_client_socks5_request_auth_not_accepted():
-
     def server():
         io = SansIORW(encoding="utf-8")
         version, one, auth_method = yield from io.read_struct("BBB")
@@ -300,7 +283,6 @@ def test_client_socks5_request_auth_not_accepted():
 
 
 def test_client_socks5_request_auth_username_bad_auth_version():
-
     def server():
         io = SansIORW(encoding="utf-8")
         version, one, auth_method = yield from io.read_struct("BBB")
@@ -322,7 +304,6 @@ def test_client_socks5_request_auth_username_bad_auth_version():
 
 
 def test_client_socks5_request_auth_username_failed():
-
     def server():
         io = SansIORW(encoding="utf-8")
         version, one, auth_method = yield from io.read_struct("BBB")
@@ -344,7 +325,6 @@ def test_client_socks5_request_auth_username_failed():
 
 
 def test_client_socks5_command_bad_version():
-
     def server():
         io = SansIORW(encoding="utf-8")
         version, one, auth_method = yield from io.read_struct("BBB")
@@ -362,7 +342,6 @@ def test_client_socks5_command_bad_version():
 
 
 def test_client_socks5_command_request_not_granted():
-
     def server():
         io = SansIORW(encoding="utf-8")
         version, one, auth_method = yield from io.read_struct("BBB")
@@ -383,7 +362,6 @@ def test_client_socks5_command_request_not_granted():
 
 @pytest.mark.skip("this check removed")
 def test_client_socks5_command_redirect_is_not_allowed():
-
     def server():
         io = SansIORW(encoding="utf-8")
         version, one, auth_method = yield from io.read_struct("BBB")
@@ -403,7 +381,6 @@ def test_client_socks5_command_redirect_is_not_allowed():
 
 
 def test_client_socks5_success_ipv4():
-
     def server():
         io = SansIORW(encoding="utf-8")
         version, one, auth_method = yield from io.read_struct("BBB")
@@ -422,7 +399,6 @@ def test_client_socks5_success_ipv4():
 
 
 def test_client_socks5_success_ipv6():
-
     def server():
         io = SansIORW(encoding="utf-8")
         version, one, auth_method = yield from io.read_struct("BBB")
@@ -441,7 +417,6 @@ def test_client_socks5_success_ipv6():
 
 
 def test_client_socks5_success_domain():
-
     def server():
         io = SansIORW(encoding="utf-8")
         version, one, auth_method = yield from io.read_struct("BBB")
@@ -461,7 +436,6 @@ def test_client_socks5_success_domain():
 
 
 def test_server_socks5_no_auth_methods():
-
     def client():
         io = SansIORW(encoding="utf-8")
         yield from io.write_struct("B", 5)
@@ -473,7 +447,6 @@ def test_server_socks5_no_auth_methods():
 
 
 def test_server_socks5_bad_username_auth_version():
-
     def client():
         io = SansIORW(encoding="utf-8")
         yield from io.write_struct("B", 5)
@@ -488,7 +461,6 @@ def test_server_socks5_bad_username_auth_version():
 
 
 def test_server_socks5_bad_username():
-
     def client():
         io = SansIORW(encoding="utf-8")
         yield from io.write_struct("B", 5)
@@ -507,7 +479,6 @@ def test_server_socks5_bad_username():
 
 
 def test_server_socks5_bad_password():
-
     def client():
         io = SansIORW(encoding="utf-8")
         yield from io.write_struct("B", 5)
@@ -526,7 +497,6 @@ def test_server_socks5_bad_password():
 
 
 def test_server_socks5_command_not_supported():
-
     def client():
         io = SansIORW(encoding="utf-8")
         yield from io.write_struct("B", 5)
@@ -546,7 +516,6 @@ def test_server_socks5_command_not_supported():
 
 
 def test_server_socks5_address_type_not_supported():
-
     def client():
         io = SansIORW(encoding="utf-8")
         yield from io.write_struct("B", 5)
@@ -561,7 +530,6 @@ def test_server_socks5_address_type_not_supported():
 
 
 def test_server_socks5_connection_failed():
-
     def client():
         io = SansIORW(encoding="utf-8")
         yield from io.write_struct("B", 5)
@@ -579,7 +547,6 @@ def test_server_socks5_connection_failed():
 
 
 def test_server_socks5_connection_ipv4_success():
-
     def client():
         io = SansIORW(encoding="utf-8")
         yield from io.write_struct("B", 5)
@@ -598,7 +565,6 @@ def test_server_socks5_connection_ipv4_success():
 
 
 def test_server_socks5_connection_ipv6_success():
-
     def client():
         io = SansIORW(encoding="utf-8")
         yield from io.write_struct("B", 5)
@@ -617,7 +583,6 @@ def test_server_socks5_connection_ipv6_success():
 
 
 def test_server_socks5_connection_domain_success():
-
     def client():
         io = SansIORW(encoding="utf-8")
         yield from io.write_struct("B", 5)

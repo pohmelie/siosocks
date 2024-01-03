@@ -1,12 +1,11 @@
-import socketserver
-import socket
 import logging
-from concurrent.futures import ThreadPoolExecutor, wait, FIRST_EXCEPTION
+import socket
+import socketserver
+from concurrent.futures import FIRST_EXCEPTION, ThreadPoolExecutor, wait
 
 from ..interface import AbstractSocksIO, sync_engine
 from ..protocol import SocksServer
 from .const import DEFAULT_BLOCK_SIZE
-
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +14,6 @@ TIMEOUT = 0.5
 
 
 class ServerIO(AbstractSocksIO):
-
     def __init__(self, socket):
         self.incoming_socket = socket
         self.incoming_socket.settimeout(TIMEOUT)
@@ -58,7 +56,6 @@ class ServerIO(AbstractSocksIO):
 
 
 class socks_server_handler(socketserver.BaseRequestHandler):
-
     def __init__(self, *args, socks_protocol_kw, **kwargs):
         self._socks_protocol_kw = socks_protocol_kw
         super().__init__(*args, **kwargs)

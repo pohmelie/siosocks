@@ -4,7 +4,6 @@ from siosocks.exceptions import SocksException
 
 
 class AbstractSocksIO(abc.ABC):
-
     @abc.abstractmethod
     def read(self):
         """

@@ -191,4 +191,4 @@ Example above use Caesar cipher for simplicity (and security of course).
 # Contributions
 - [ ] add more backends (average)
 - [ ] speed up `passthrough` implementation (seems hard)
-- [ ] full protocol implementation (#4)
+- [ ] full protocol implementation ([#4](https://github.com/pohmelie/siosocks/issues/4))
